@@ -2,7 +2,6 @@ archive
 extra
 figures
 myfolder/02_models
-myfolder/03_data
 # History files
 .Rhistory
 .Rapp.history
