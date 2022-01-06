@@ -1,25 +1,37 @@
 sample_values = function(population_size,
-                         interaction_effect,
-                         mean_unrw,
-                         mean_rw,
-                         sd_unrw,
-                         sd_rw) {
-  noload_unrw = rnorm(population_size, mean_unrw, sd_unrw)
-  #Something I thought of:
-  #More load=bigger difference between the means.
-  #We predict that 1 square was already loading.
-  #Therefore, we predict that this difference we got would be smaller in our no load condition.
-  #So maybe we should reduce the differences between the means for the noload condition.
-  noload_rw = rnorm(population_size, mean_rw, sd_rw)
-  #(b) -----------------------------------------------------------------------
-  load_unrw = rnorm(population_size, mean_unrw, sd_unrw)
-  load_rw = rnorm(population_size, mean_rw + interaction_effect, sd_rw)
-  df_anova = data_frame(noload_rw, noload_unrw, load_unrw, load_rw)
-  df_anova = df_anova%>%mutate(subj = row_number()) %>% pivot_longer(
-    cols = c(noload_rw, noload_unrw, load_unrw, load_rw),
-    names_to = c("load", "reward"),
-    names_sep = "_",
-    values_to = "stay"
-  )
-  return (df_anova)
+                         mean_group1,
+                         mean_group2,
+                         sd_group1,
+                         sd_group2,
+                         interaction_difference,
+                         independent_var_name_1,
+                         independent_var_name_2,
+                         dependent_var_name) {
+
+  # generate values for groups a_1 and a_2 ----------------------------------
+
+  group_a_1 = rnorm(population_size, mean_group1, sd_group1)
+  group_a_2 = rnorm(population_size, mean_group2, sd_group2)
+  # generate values for groups b_1 and b_2 -----------------------------------------------------------------------
+  group_b_1 = rnorm(population_size, mean_group1, sd_group1)
+  group_b_2 = rnorm(population_size, mean_group2 + interaction_difference, sd_group2) #interaction is when both fixed effects are present, so only group b_2 gets it.
+  df = data_frame(group_a_1, group_a_2, group_b_1, group_b_2)
+  colnames(df)=c(paste(independent_var_name_1,"_0_",independent_var_name_2,"_0"),paste(independent_var_name_1,"_0_",independent_var_name_2,"_1"),paste(independent_var_name_1,"_1_",independent_var_name_2,"_0"),paste(independent_var_name_1,"_1_",independent_var_name_2,"_1"))
+  num_char_var1=nchar(independent_var_name_1)
+  num_char_var2=nchar(independent_var_name_2)
+  #build names_pattern - work in progress
+  part1=paste(replicate(num_char_var1+2,"."),sep="",collapse = "")
+  part2="(.)"
+  part3=paste(replicate(num_char_var2+4,"."),sep="",collapse = "")
+  part4="(.)"
+  names_pattern = paste(part1,part2,part3,part4,sep="")
+  df = df %>% pivot_longer(cols = colnames(df),
+                           names_to = c(independent_var_name_1, independent_var_name_2),
+                           names_pattern = names_pattern,
+                           values_to = dependent_var_name)
+  df =df%>%mutate(subject = rep(1:population_size,each=4))
+  
+  df[,1:2] = sapply(df[, 1:2], as.numeric)
+
+  return (df)
 }
