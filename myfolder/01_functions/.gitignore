@@ -1,0 +1,10 @@
+# Ignore everything in this directory
+*
+  # Except this file
+!.gitignore
+!convert_json_cards.R
+!convert_json_icar.R
+!convert_json_questions.R
+!convert_json_screen_size.R
+!convert_json_self_reports.R
+!convert_json_squares.R
