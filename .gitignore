@@ -2,6 +2,8 @@ archive
 extra
 figures
 myfolder
+02_preprocessing.R
+04_model-agnost_analysis.R
 # History files
 .Rhistory
 .Rapp.history
