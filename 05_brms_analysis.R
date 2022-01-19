@@ -218,6 +218,12 @@ set_prior(
   coef = "rw_when_unch_last_appeared"
 ))
 
+prior_ch_better=c(set_prior(
+  prior = "normal(0,0.2)",
+  class = "b",
+  coef = "Intercept"
+))
+
 #weak prior
 bayes_rw_weak <-
   brm(
@@ -440,3 +446,63 @@ bayes_unch_rw <-
     prior = prior_medium_unch
   )
 save(bayes_unch_rw, file = 'myfolder/02_models/model_rw_unch.Rdata')
+
+
+# chose_better ----------------------------------------------------------------
+bayes_ch_better <-
+  brm(
+    formula=chose_better~0+Intercept+(1|subj),
+    data = cards,
+    family = bernoulli(link = "logit"),
+    warmup = 1000,
+    iter = 2000,
+    chains = 4,
+    inits = "0",
+    cores = 4,
+    seed = 123,
+    prior = prior_ch_better
+  )
+save(bayes_ch_better, file = 'myfolder/02_models/brms_agnostic_model/model_ch_better.Rdata')
+
+#guessing_squares
+bayes_guess_square_0 <-
+  brm(
+    formula=acc~0+Intercept+(1|subj),
+    data = memory%>%filter(set_size==0),
+    family = bernoulli(link = "logit"),
+    warmup = 1000,
+    iter = 2000,
+    chains = 4,
+    inits = "0",
+    cores = 4,
+    seed = 123,
+  )
+save(bayes_guess_square_0, file = 'myfolder/02_models/brms_agnostic_model/model_guess_square_0.Rdata')
+
+bayes_guess_square_1 <-
+  brm(
+    formula=acc~0+Intercept+(1|subj),
+    data = memory%>%filter(set_size==1),
+    family = bernoulli(link = "logit"),
+    warmup = 1000,
+    iter = 2000,
+    chains = 4,
+    inits = "0",
+    cores = 4,
+    seed = 123,
+  )
+save(bayes_guess_square_1, file = 'myfolder/02_models/brms_agnostic_model/model_guess_square_1.Rdata')
+
+bayes_guess_square_4 <-
+  brm(
+    formula=acc~0+Intercept+(1|subj),
+    data = memory%>%filter(set_size==4),
+    family = bernoulli(link = "logit"),
+    warmup = 1000,
+    iter = 2000,
+    chains = 4,
+    inits = "0",
+    cores = 4,
+    seed = 123,
+  )
+save(bayes_guess_square_4, file = 'myfolder/02_models/brms_agnostic_model/model_guess_square_4.Rdata')

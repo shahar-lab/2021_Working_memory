@@ -2,9 +2,11 @@ rm(list = ls())
 library(tidyverse)
 library(tidylog)
 library(stringr)
+library(stringi)
 library(dplyr)
 library(magrittr)
 library(data.table)
+
 
 load('myfolder/03_data/02_aggregated_data/exp2_07.2021/cards2_raw.Rdata')
 load('myfolder/03_data/02_aggregated_data/exp2_07.2021/cards3_raw.Rdata')
@@ -13,7 +15,7 @@ load('myfolder/03_data/02_aggregated_data/exp2_07.2021/memory3_raw.Rdata')
 load('myfolder/03_data/02_aggregated_data/exp2_07.2021/squares_raw.Rdata')
 load('myfolder/03_data/02_aggregated_data/exp2_07.2021/icar_raw.Rdata')
 load('myfolder/03_data/02_aggregated_data/exp2_07.2021/oci_raw.Rdata')
-demographic=read.csv("/home/shared/0004_Ido_Set-size_effects/myfolder/03_data/03_demographic_data/demographic_07.2021.csv")
+demographic=read.csv("myfolder/03_data/03_demographic_data/demographic_07.2021.csv")
 
 
 
@@ -97,24 +99,25 @@ cards%<>%mutate(set_size_when_unch_last_appeared=case_when(
 cards %<>% filter(abort == F) %>% na.omit() %>% as.data.frame()
 
 #remove subjects who selected the same response key in more than 80% of the time
-subj_to_remove <- cards %>% group_by(subj) %>% summarise(stay = mean(stay_key)) %>% mutate(abort_subj = stay > .8) %>% filter(abort_subj == T) %>% dplyr::select(subj)
+subj_to_remove = as.data.frame(c())
+subj_to_remove <- rbind(subj_to_remove,cards %>% group_by(subj) %>% summarise(stay = mean(stay_key)) %>% mutate(abort_subj = stay > .8) %>% filter(abort_subj == T) %>% dplyr::select(subj))
 #remove subjects for which trial omission is more than 30% after removing missing data and fast/slow reaction-times
-
+subj_to_remove <- rbind(subj_to_remove,cards %>% group_by(subj) %>% summarise(p.trls = length(trial) / (50*2*3*2 - 1)) %>% mutate(abort_subj = p.trls < .70) %>% filter(abort_subj == T) %>% select(subj))
 # add RT bin pre subject
-Nbins=4
-mybreaks    =seq(0,1,by=1/Nbins)
-cards$bin_rt=rep(0,dim(cards)[1])
-detach(package:tidylog) #remove tidylog to avoid multiple outputs
-for (t in 1:dim(cards)[1]) {
-  current.rt  =cards$rt[t]
-  current.bins=cards %>% filter(subj==subj[t]) %>% summarise(Q=quantile(rt,mybreaks))%>%unlist()
-  for (bin in 1:Nbins) {
-    if (current.bins[bin]<=current.rt & current.rt<=current.bins[bin+1]){cards$bin_rt[t]=bin}
-  }
-}
-library(tidylog)
-#add prev_bin_rt
-cards%<>%mutate(prev_bin_rt=lag(bin_rt))
+# Nbins=4
+# mybreaks    =seq(0,1,by=1/Nbins)
+# cards$bin_rt=rep(0,dim(cards)[1])
+# detach(package:tidylog) #remove tidylog to avoid multiple outputs
+# for (t in 1:dim(cards)[1]) {
+#   current.rt  =cards$rt[t]
+#   current.bins=cards %>% filter(subj==subj[t]) %>% summarise(Q=quantile(rt,mybreaks))%>%unlist()
+#   for (bin in 1:Nbins) {
+#     if (current.bins[bin]<=current.rt & current.rt<=current.bins[bin+1]){cards$bin_rt[t]=bin}
+#   }
+# }
+# library(tidylog)
+# #add prev_bin_rt
+# cards%<>%mutate(prev_bin_rt=lag(bin_rt))
 
 #remove first trial
 cards %<>% na.omit() %>% as.data.frame() 
@@ -219,7 +222,7 @@ reward_matrix=reward_matrix[c(1:50),]
 
 cards %<>% rowwise()%>% mutate(prob_chosen=reward_matrix[trial,ch_card+1])%>% 
 mutate(prob_unchosen=reward_matrix[trial,unch_card+1])%>%
-mutate(chose_better=if_else(prob_chosen>=prob_unchosen,TRUE,FALSE))
+mutate(chose_better=if_else(prob_chosen>=prob_unchosen,1,0))
 demographic%<>%mutate(cards%>%group_by(subj,ch_key)%>%summarise(reward=mean(reward))%>%
                         pivot_wider(names_from='ch_key',values_from='reward')%>%
                         mutate(real_diff=`1`-`0`)%>%
@@ -242,13 +245,24 @@ demographic=cbind(demographic,cards%>%
                     ungroup()%>%
                     dplyr::select(real_diff1,real_diff2))
 
+#check for repeating pair
+cards=as.data.frame.data.frame(cards)
+cards=cards%>%mutate(card_pair = paste(card_right,card_left),
+                     reoffer_pair=if_else(subtrial==1,
+                                          card_pair==lag(card_pair,1)|card_pair==lag(card_pair,2)|stri_reverse(card_pair)==lag(card_pair,1)|stri_reverse(card_pair)==lag(card_pair,2),
+                                          card_pair==lag(card_pair,2)|card_pair==lag(card_pair,3)|stri_reverse(card_pair)==lag(card_pair,2)|stri_reverse(card_pair)==lag(card_pair,3))
+                     )
+#add repeating pair for keys
+cards=cards%>%mutate(repeat_pair_one_back=subtrial==1&(card_pair==lag(card_pair,1)|stri_reverse(card_pair)==lag(card_pair,1)))
 
 #cards for analysis - only second subtrial
 cards_analysis=cards%>%filter(subtrial==2)
 
+
+
 #summary
 #one subject was removed due to pressing the same key for more then 80% of the trial
-#two subjects were removed due to having more then 30% trials removed due to missing data, fast or slow RTs (changed from, 20% at prereg)
+#three subjects were removed due to having more then 30% trials removed due to missing data, fast or slow RTs (changed from, 20% at prereg)
 #one subjects was removed due to negative capacity or to less than chance performance in set_size 4
 
 save(cards_analysis, file = 'myfolder/03_data/02_aggregated_data/exp2_07.2021/data_for_analysis/data_cards_analysis.Rdata')

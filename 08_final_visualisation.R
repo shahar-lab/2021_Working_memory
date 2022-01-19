@@ -28,8 +28,8 @@ load('myfolder/02_models/brms_agnostic_model/model_rw_cent_cap_ss.Rdata')
 #plot descriptive main effect - A
 con_rw = conditional_effects(bayes_rw_medium)
 plotA = plot(con_rw, plot = FALSE)[[1]] + ggtitle("(A)") + xlab("First offer outcome") +
-  ylab("Stay key") + theme_cowplot()+
-  scale_x_discrete(labels=c("Unrewarded","Rewarded"))
+  ylab("Stay key") + theme_cowplot() +
+  scale_x_discrete(labels = c("Unrewarded", "Rewarded"))
 
 
 #plot posterior for main effect - B
@@ -37,18 +37,9 @@ posteriors_rw = insight::get_parameters(bayes_rw_medium)
 ci_hdi <- ci(posteriors_rw$b_reward_oneback1, method = "HDI")
 prior = distribution_normal(4000, mean = 0, sd = 0.2)
 plotB = ggplot(posteriors_rw, aes(x = b_reward_oneback1)) +
-  theme_classic() +
-  geom_density(fill = "orange") +
+  geom_density(fill = "gray") +
   ggtitle("(B)") +
   theme(plot.title = element_text(size = 14)) +
-  geom_segment(aes(
-    x = median(b_reward_oneback1) ,
-    y = 0,
-    xend = median(b_reward_oneback1),
-    yend = 11.59
-  ),
-  color = "red",
-  size = 1) +
   geom_segment(
     aes(
       x = ci_hdi$CI_low ,
@@ -79,16 +70,28 @@ plotB = ggplot(posteriors_rw, aes(x = b_reward_oneback1)) +
     color = "royalblue",
     size = 2
   ) +
-  xlab(label = expression(paste(beta," Reward on first offer"))) +
-  ylab(label = "Density") + theme_cowplot()
-  
+  geom_segment(
+    aes(
+      x = median(b_reward_oneback1) ,
+      y = 0,
+      xend = median(b_reward_oneback1),
+      yend = 11.7
+    ),
+    color = "red",
+    size = 1,
+    linetype = 2
+  )+ 
+  xlab(label = expression(paste(beta, " Previous-outcome"))) +
+  ylab(label = "Density") +
+  theme_cowplot()
+
 
 #plot descriptive capacity effect - C
-demographic=demographic%>%mutate(diff_parameter=coef(bayes_rw_medium,pars="reward_oneback1")$subj[1:169])
+demographic = demographic %>% mutate(diff_parameter = coef(bayes_rw_medium, pars =
+                                                             "reward_oneback1")$subj[1:169])
 plotC = demographic %>% ggplot(aes(x = avg_capacity, y = diff_parameter)) + ylab('Key-response learning') +
   xlab('Working memory capacity') +
-  theme_cowplot() + geom_point() + geom_smooth(method = "lm") + ggtitle("(A)")+
-  annotation_custom("r=-0.32")
+  theme_cowplot() + geom_point() + geom_smooth(method = "lm") + ggtitle("(C)")
 
 #plot posterior for capacity effect - D
 posteriors_rw_cap = insight::get_parameters(bayes_rw_centered_capacity)
@@ -98,17 +101,9 @@ ci_hdi_cap <-
 plotD = ggplot(posteriors_rw_cap,
                aes(x = `b_reward_oneback1:centered_avg_capacity`)) +
   theme_cowplot() +
-  geom_density(fill = "orange") +
-  ggtitle("(B)") +
+  geom_density(fill = "gray") +
+  ggtitle("(D)") +
   theme(plot.title = element_text(size = 14)) +
-  geom_segment(aes(
-    x = median(`b_reward_oneback1:centered_avg_capacity`) ,
-    y = 0,
-    xend = median(`b_reward_oneback1:centered_avg_capacity`),
-    yend = 10.4
-  ),
-  color = "red",
-  size = 1) +
   geom_segment(
     aes(
       x = ci_hdi_cap$CI_low ,
@@ -139,10 +134,23 @@ plotD = ggplot(posteriors_rw_cap,
     color = "royalblue",
     size = 2
   ) +
-  xlab(label = expression(paste(beta," Reward X Working memory capacity"))) +
+  geom_segment(
+    aes(
+      x = median(`b_reward_oneback1:centered_avg_capacity`) ,
+      y = 0,
+      xend = median(`b_reward_oneback1:centered_avg_capacity`),
+      yend = 10.5
+    ),
+    color = "red",
+    size = 1,
+    linetype = 2
+  )+
+xlab(label = expression(paste(
+  beta, " Previous-outcome X Working memory capacity"
+))) +
   ylab(label = "Density") + theme_cowplot()
 
-grid.arrange(plotA, plotB, plotC, plotD)
+grid.arrange(plotA,  plotC, plotB, plotD)
 
 
 # SI - FIGURES -------------------------------------------------------------
@@ -153,17 +161,20 @@ ci_hdi_ss <-
   ci(posteriors_rw_ss$`b_reward_oneback1:set_sizeHigh`, method = "HDI")
 plot1 = ggplot(posteriors_rw_ss, aes(x = `b_reward_oneback1:set_sizeHigh`)) +
   theme_classic() +
-  geom_density(fill = "orange") +
+  geom_density(fill = "gray") +
   ggtitle("(B)") +
   theme(plot.title = element_text(size = 14)) +
-  geom_segment(aes(
-    x = median(`b_reward_oneback1:set_sizeHigh`) ,
-    y = 0,
-    xend = median(`b_reward_oneback1:set_sizeHigh`),
-    yend = 9.01
-  ),
-  color = "red",
-  size = 1) +
+  geom_segment(
+    aes(
+      x = median(`b_reward_oneback1:set_sizeHigh`) ,
+      y = 0,
+      xend = median(`b_reward_oneback1:set_sizeHigh`),
+      yend = 9.06
+    ),
+    color = "red",
+    size = 1,
+    linetype = 2
+  ) +
   geom_segment(
     aes(
       x = ci_hdi_ss$CI_low ,
@@ -194,17 +205,19 @@ plot1 = ggplot(posteriors_rw_ss, aes(x = `b_reward_oneback1:set_sizeHigh`)) +
     color = "royalblue",
     size = 2
   ) +
-  xlab(label = expression(paste(beta," Reward X Working memory load"))) +
+  xlab(label = expression(paste(
+    beta, " Previous-outcome X Working memory load"
+  ))) +
   ylab(label = "Density") + theme_cowplot()
 #plot descriptive set_size effect
 con_ss <-
   conditional_effects(bayes_rw_set_size, effects = "reward_oneback:set_size")
 con_ss <- con_ss$`reward_oneback:set_size`
-plot2=ggplot(aes(x = set_size, y = estimate__, colour = reward_oneback), data = con_ss) +
+plot2 = ggplot(aes(x = set_size, y = estimate__, colour = reward_oneback), data = con_ss) +
   geom_point(position = position_dodge(width = 0.4),
              alpha = 0.4) +
   geom_pointrange(aes(ymax = upper__, ymin = lower__),
                   position = position_dodge(width = 0.4)) +
   scale_y_continuous(name = "Stay key", limits = c(0.41, 0.5)) +
-  ggtitle("(A)") + xlab("Working memory load") + ylab("Stay key") + theme_cowplot()+
-  labs(color='Reward first offer')
+  ggtitle("(A)") + xlab("Working memory load") + ylab("Stay key") + theme_cowplot() +
+  labs(color = 'Previous outcome')

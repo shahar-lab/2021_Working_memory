@@ -116,13 +116,39 @@ Anova(m18)
 save(m18, file = 'myfolder/02_models/glmer/sqrCorrect_reward_chKeyCorrect_glmer.Rdata')
 
 
-#model for capacity by chose_better and diff
-m19=lm(formula=avg_capacity~1+diff*chose_better,data=demographic)
+#model for chose_better by capacity and set_size
+m19=glmer(formula=chose_better~1+avg_capacity*set_size+(1+avg_capacity*set_size|subj),family=binomial(link="logit"),nAGQ=0,data=cards)
 summary(m19)
 Anova(m19)
-save(m19, file = 'myfolder/02_models/glmer/sqrCorrect_reward_chKeyCorrect_glmer.Rdata')
+save(m19, file = 'myfolder/02_models/glmer/chose_better_wm_glmer.Rdata')
 
 #model for stay with unch_card by reward
 m20=glmer(formula=stay_unch_card~1+reward_oneback+(1+reward_oneback|subj),family=binomial(link="logit"),nAGQ=0,data=cards_unch)
 summary(m20)
 save(m20, file = 'myfolder/02_models/glmer/unch_card_rw.Rdata')
+
+
+#model for stay with unch_card by reward
+m20=glmer(formula=stay_unch_card~1+reward_oneback+(1+reward_oneback|subj),family=binomial(link="logit"),nAGQ=0,data=cards_unch)
+summary(m20)
+save(m20, file = 'myfolder/02_models/glmer/unch_card_rw.Rdata')
+
+#model for relevant_learning
+m21=glmer(formula=stay_ch_card~1+rw_when_ch_last_appeared+(1+rw_when_ch_last_appeared*set_size|subj),family=binomial(link="logit"),nAGQ=0,data=cards%>%filter(reoffer_pair))
+summary(m21)
+save(m21, file = 'myfolder/02_models/glmer/relevant_learning.Rdata')
+
+#model for relevant_learning and set_size
+m22=glmer(formula=stay_ch_card~1+rw_when_ch_last_appeared*set_size+(1+rw_when_ch_last_appeared*set_size|subj),family=binomial(link="logit"),nAGQ=0,data=cards%>%filter(reoffer_pair))
+summary(m22)
+save(m22, file = 'myfolder/02_models/glmer/relevant_learning_ss.Rdata')
+
+#model for relevant_learning and set_size and capacity
+m23=glmer(formula=stay_ch_card~1+rw_when_ch_last_appeared*set_size*centered_avg_capacity+(1+rw_when_ch_last_appeared*set_size|subj),family=binomial(link="logit"),nAGQ=0,data=cards%>%filter(reoffer_pair))
+summary(m23)
+save(m23, file = 'myfolder/02_models/glmer/relevant_learning_ss_cap.Rdata')
+
+#model for irrelevant_learning between trials
+m24=glmer(formula=stay_key~1+reward_oneback*set_size*centered_avg_capacity+(1+reward_oneback*set_size|subj),family=binomial(link="logit"),nAGQ=0,data=cards%>%filter(repeat_pair_one_back))
+summary(m24)
+save(m24, file = 'myfolder/02_models/glmer/irrelevant_learning_trials_ss.Rdata')
