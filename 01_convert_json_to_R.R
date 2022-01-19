@@ -1,12 +1,12 @@
 rm(list=ls())
 # pull data from json -----------------------------------------------------
 
-source('myfolder/01_functions/convert_json_screen_size.R')
-source('myfolder/01_functions/convert_json_questions.R')
-source('myfolder/01_functions/convert_json_squares.R')
-source('myfolder/01_functions/convert_json_cards.R')
-source('myfolder/01_functions/convert_json_icar.R')
-source('myfolder/01_functions/convert_json_self_reports.R')
+source('convert_json_function/convert_json_screen_size.R')
+source('convert_json_function/convert_json_questions.R')
+source('convert_json_function/convert_json_squares.R')
+source('convert_json_function/convert_json_cards.R')
+source('convert_json_function/convert_json_icar.R')
+source('convert_json_function/convert_json_self_reports.R')
 
 mainfolder<-paste(getwd(),'/myfolder/03_data/01_raw_data/exp2_07.2021',sep="")
 subfolder <-dir(mainfolder)
